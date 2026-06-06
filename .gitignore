@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build artifacts and compiled CUDA extensions
+build/
+dist/
+*.egg-info/
+*.egg
+*.so
+*.pyd
+
+# uv / virtualenvs
+.venv/
+.uv/
+uv-cache/
+venv/
+env/
+ENV/
+
+# IDE / OS
+.idea/
+.DS_Store
+Thumbs.db
+
+# Vendored 3rd-party headers (fetched by scripts/bootstrap_cuda.sh from glm 0.9.9.8)
+feature_gaussian/third_party/glm/glm/
+pano_feature_gaussian/third_party/glm/glm/
+
+# Downloaded checkpoints (fetched from OneDrive per README "Pre-trained checkpoints")
+checkpoints/
+*.pth
+*.pth.pth
+
+# Local logs / scratch outputs accidentally landing in the repo root
+*.log
+seq/

@@ -1,0 +1,69 @@
+# Reproducible environment for BevSplat.
+#
+# Usage:
+#     curl -LsSf https://astral.sh/uv/install.sh | sh   # install uv if needed
+#     uv venv
+#     uv sync                                            # install Python deps
+#     bash scripts/bootstrap_cuda.sh                     # vendor glm + build CUDA exts
+#
+# The exact versions below match the dev server that produced the paper's
+# Table 1 and Table 2 numbers; they're known to compile together against
+# CUDA 11.8 + nvcc 11.8 + g++ 11. If you want a different CUDA toolkit,
+# change the ``pytorch-cu118`` source below to the matching wheel index
+# (``cu121``, ``cu124``, ...).
+
+[project]
+name = "bevsplat"
+version = "0.1.0"
+description = "BevSplat: Resolving Height Ambiguity via Feature-Based Gaussian Primitives for Weakly-Supervised Cross-View Localization (NeurIPS 2026)"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10,<3.12"
+
+dependencies = [
+  # Deep learning backbone
+  "torch==2.6.0",
+  "torchvision==0.21.0",
+  "timm==1.0.27",
+  "e3nn==0.6.0",
+  "einops==0.8.1",
+  "jaxtyping==0.3.2",
+  # Numerical / scientific
+  "numpy==1.26.4",
+  "scipy==1.11.4",
+  "pandas==2.1.4",
+  "scikit-image>=0.22,<0.25",
+  # Imaging / visualization (open3d & plotly are imported at module-load
+  # time by gaussian/encoder_pano.py even though the model itself doesn't
+  # call them — they're cheap to install and avoid edit-the-source detours)
+  "Pillow>=10.0,<11.0",
+  "matplotlib>=3.8,<3.10",
+  "opencv-python==4.10.0.84",
+  "open3d==0.19.0",
+  "plotly>=5.18,<7.0",
+]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.5", "pytest>=8.0"]
+
+# ---------------------------------------------------------------------------
+# uv configuration
+# ---------------------------------------------------------------------------
+
+[tool.uv]
+# Repo itself isn't installed as a package — kitti_main/ and vigor_main/
+# are run via ``python -m`` from the repo root.
+package = false
+
+# Pin torch to the cu118 wheel index for reproducibility. If you need a
+# different toolkit, swap ``cu118`` to ``cu121`` / ``cu124`` / ``cpu`` in
+# both the URL and the source name. ``uv lock`` will pick the matching
+# wheels.
+[[tool.uv.index]]
+name = "pytorch-cu118"
+url = "https://download.pytorch.org/whl/cu118"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu118" }
+torchvision = { index = "pytorch-cu118" }
