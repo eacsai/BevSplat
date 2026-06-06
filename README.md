@@ -114,6 +114,10 @@ Drive/file lists live in `dataLoader/{train_files,test1_files,test2_files}.txt` 
 
 Change the dataset root by editing `KITTI_ROOT` in `kitti_main/config.py` or `root_dir` in `dataLoader/KITTI_dataset.py:21`.
 
+**Where the source data comes from.** We use the same KITTI assembly as [Loc²](https://github.com/vita-epfl/Loc2). Follow [Loc² → Datasets](https://github.com/vita-epfl/Loc2#datasets) (which in turn points at [HighlyAccurate](https://github.com/YujiaoShi/HighlyAccurate)) to organize the raw KITTI drives, the satellite tiles, and the train/test1/test2 file lists into `satmap/` + `depth_data/` as shown above.
+
+**Generating per-frame depth.** Loc² doesn't ship per-pixel ground-image depth. The `image_02/grd_depth/*_grd_depth.pt` tensors expected by BevSplat are produced by running [Depth-Anything V2](https://github.com/DepthAnything/Depth-Anything-V2) over every `image_02/grd_no_sky/*.png` in your KITTI tree, then saving each output to the matching `image_02/grd_depth/*_grd_depth.pt` location. (Approximately one `.pt` per RGB frame; total ~6 GB across the KITTI train + test1 + test2 splits.)
+
 ### VIGOR
 
 Expected layout under `${VIGOR_ROOT}` (default: `/data/dataset/VIGOR`):
@@ -133,6 +137,24 @@ ${VIGOR_ROOT}/
 ```
 
 Change the dataset root in `vigor_main/config.py` or `dataLoader/Vigor_dataset_gs.py:15`.
+
+**Where the source data comes from.** We use the same VIGOR assembly as [Loc²](https://github.com/vita-epfl/Loc2). Follow [Loc² → Datasets](https://github.com/vita-epfl/Loc2#datasets) (which points at the [official VIGOR repo](https://github.com/Jeff-Zilence/VIGOR/blob/main/data/DATASET.md)) to obtain `satellite/`, `panorama/`, `pano_mask_sky/`, and `splits__corrected/`.
+
+**Generating per-frame depth.** The `UniK3D_{train,test}_metric/<id>_depth.npy` tensors are produced by [UniK3D](https://github.com/lpiccinelli-eth/UniK3D) over every panoramic image in `<city>/panorama/`. Loc² ships a ready-to-use wrapper:
+
+```bash
+# In a separate Loc² checkout
+pip install -e external/unik3d/
+for city in NewYork Chicago SanFrancisco Seattle; do
+  python preprocess/infer_depth_vigor.py \
+      --input  ${VIGOR_ROOT}/${city}/panorama \
+      --output ${VIGOR_ROOT}/${city}/UniK3D_train_metric \
+      --save
+  # repeat with --output .../UniK3D_test_metric for the test split
+done
+```
+
+(BevSplat consumes the resulting `.npy` files unmodified — only the directory name needs to match `UniK3D_{train,test}_metric/`.)
 
 ---
 
